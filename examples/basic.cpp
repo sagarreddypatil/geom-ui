@@ -1,4 +1,4 @@
-#include "test.h"
+#include <test.hpp>
 
 int main() {
     print_hello();
