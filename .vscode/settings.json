@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "ostream": "cpp",
+        "optional": "cpp",
+        "variant": "cpp"
+    },
+    "C_Cpp.default.compileCommands": "/home/sagar/Documents/geom-ui/builddir/compile_commands.json"
+}
