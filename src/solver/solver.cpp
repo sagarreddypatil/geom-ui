@@ -6,8 +6,84 @@
 
 namespace geomui {
 
+LinTerm Var::operator*(double coef) const {
+    return LinTerm(coef, *this);
+}
+
+GenLinExpr Var::operator+(const LinTerm& other) const{
+    return LinTerm(1, *this) + other;
+}
+
+GenLinExpr Var::operator-(const LinTerm& other) const {
+    return *this + (-other);
+}
+
+Constraint Var::operator|=(const Var& other) const {
+    return (GenLinExpr)(LinTerm)(*this) |= (LinTerm)other;
+}
+
+LinTerm operator*(double coef, const Var& var) {
+    return LinTerm(coef, var);
+}
+
+Var::operator LinTerm() const {
+    return LinTerm(1, *this);
+}
+
+Constraint Var::operator|=(const GenLinExpr& other) const {
+    return (GenLinExpr)(LinTerm)(*this) |= other;
+}
+
+GenLinExpr LinTerm::operator+(const LinTerm& other) const {
+    return GenLinExpr(0, {*this, other});
+}
+
+LinTerm LinTerm::operator-() const {
+    return LinTerm(-coef, var);
+}
+
+LinTerm::operator GenLinExpr() const {
+    return GenLinExpr(0, {*this});
+}
+
+GenLinExpr GenLinExpr::operator+(const LinTerm& term) const {
+    LinExpr new_terms = terms;
+    new_terms.push_back(term);
+    return GenLinExpr(constant, new_terms);
+}
+
+GenLinExpr GenLinExpr::operator-(const LinTerm& term) const {
+    return *this + (-term);
+}
+
+GenLinExpr GenLinExpr::operator+(double other) const {
+    return GenLinExpr(this->constant + other, this->terms);
+}
+
+GenLinExpr operator+(const double constant, const GenLinExpr& term) {
+    return GenLinExpr(constant + term.constant, term.terms);
+}
+
+Constraint GenLinExpr::operator|=(const GenLinExpr& other) const {
+    LinExpr nterms = terms;
+    for(auto t : other.terms) {
+        nterms.push_back(LinTerm(-t.coef, t.var));
+    }
+
+    double constant = other.constant - this->constant;
+
+    return Constraint(constant, nterms);
+}
+
+// Constraint GenLinExpr::operator|=(const LinExpr& other) const {
+//     return (GenLinExpr)(*this) |= other + 0;
+// }
+
+// Constraint GenLinExpr::operator|=(const Var& other) const;
+// Constraint GenLinExpr::operator|=(const double other) const;
+
 SolutionStatus solve(Problem problem) {
-    std::set<std::shared_ptr<Var>> vars;
+    std::set<Var> vars;
     for (auto c : problem) {
         for (auto t : c.terms) {
             if(!t.var->isFree)
