@@ -3,7 +3,7 @@
 #include <sstream>
 #include <functional>
 #include <variant>
-// #include <iostream>
+#include <iostream>
 
 namespace geomui {
 
@@ -293,14 +293,14 @@ Constraint::Constraint(Vars vars, std::string expr) {
   }
 
   // print the parsed constraint
-  // std::cout << "Input: " << expr << std::endl;
-  // std::cout << "Parsed: ";
-  // bool first = true;
-  // for(auto& term : terms) {
-  //   std::cout << (!first && term.coef >= 0 ? "+ " : "") << term.coef << term.var->name << " ";
-  //   first = false;
-  // }
-  // std::cout << "= " << constant << "\n" << std::endl;
+  std::cout << "Input: " << expr << std::endl;
+  std::cout << "Parsed: ";
+  bool first = true;
+  for(auto& term : terms) {
+    std::cout << (!first && term.coef >= 0 ? "+ " : "") << term.coef << term.var->name << " ";
+    first = false;
+  }
+  std::cout << "= " << constant << "\n" << std::endl;
 }
 
 } // namespace geomui

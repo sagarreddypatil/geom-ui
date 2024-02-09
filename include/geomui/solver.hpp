@@ -14,12 +14,17 @@
 namespace geomui {
 
 class Var {
-  // One instance represents a free variable
 public:
-  std::string name;
+  const std::string name;
   double value;
+  const bool isFree;
 
-  Var(std::string name) : name(name) {}
+  Var(std::string name) : name(name), isFree(true) {}
+  Var(std::string name, double value) : name(name), value(value), isFree(false) {}
+  
+  inline int operator=(double value) {
+    return this->value = value;
+  }
 };
 
 typedef std::set<std::shared_ptr<Var>> Vars;
@@ -31,6 +36,9 @@ static inline Vars makeVars(std::initializer_list<std::string> names) {
   }
   return vars;
 }
+
+#define MakeVar_VA_ARGS(...) , ##__VA_ARGS__
+#define MakeVar(name, ...) auto name = std::make_shared<geomui::Var>(#name MakeVar_VA_ARGS(__VA_ARGS__))
 
 class LinTerm {
   // linear term

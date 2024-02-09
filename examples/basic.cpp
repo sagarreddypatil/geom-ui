@@ -3,33 +3,37 @@
 #include <geomui.hpp>
 
 int main() {
-    /*
-     * Let's model this system of equations:
-     * x - 2y + 3z = 7
-     * 2x + y + z = 4
-     * -3x + 2y - 2z = -10
-    */
+    MakeVar(Ax, 0);
+    MakeVar(Ay, 0);
+    MakeVar(Bx);
+    MakeVar(By);
+    MakeVar(Cx);
+    MakeVar(Cy);
+    MakeVar(width, 10);
+    MakeVar(height, 5);
 
-    auto vars = geomui::makeVars({"x", "y", "z"});
-    auto x = *vars.begin();
-    auto y = *std::next(vars.begin(), 1);
-    auto z = *std::next(vars.begin(), 2);
+    auto vars = {Ax, Ay, Bx, By, Cx, Cy, width, height};
 
-    // geomui::Constraint eq1(7, geomui::LinExpr({geomui::LinTerm(1, x), geomui::LinTerm(-2, y), geomui::LinTerm(3, z)}));
-    // geomui::Constraint eq2(4, geomui::LinExpr({geomui::LinTerm(2, x), geomui::LinTerm(1, y), geomui::LinTerm(1, z)}));
-    // geomui::Constraint eq3(-10, geomui::LinExpr({geomui::LinTerm(-3, x), geomui::LinTerm(2, y), geomui::LinTerm(-2, z)}));
+    geomui::Constraint eq5(vars, "Ay = By");
+    geomui::Constraint eq6(vars, "Ax = Cx");
+    geomui::Constraint eq7(vars, "width = Bx - Ax");
+    geomui::Constraint eq8(vars, "height = Cy - Ay");
 
-    geomui::Constraint eq1(vars, "x - 2y + 3z = 7");
-    geomui::Constraint eq2(vars, "2x + y + z = 4");
-    geomui::Constraint eq3(vars, "-3x + 2y - 2z = -10");
+    geomui::Problem problem({eq5, eq6, eq7, eq8});
 
-    geomui::Problem problem({eq1, eq2, eq3});
+    auto status = geomui::solve(problem);
+    if(status == geomui::SolutionStatus::OVERDETERMINED) {
+        std::cout << "Overdetermined system" << std::endl;
+        return 1;
+    } else if(status == geomui::SolutionStatus::UNDERDETERMINED) {
+        std::cout << "Underdetermined system" << std::endl;
+        return 1;
+    }
 
-    geomui::solve(problem);
-
-    std::cout << "x = " << x->value << std::endl;
-    std::cout << "y = " << y->value << std::endl;
-    std::cout << "z = " << z->value << std::endl;
+    // print out the solution
+    for (auto v : vars) {
+        std::cout << v->name << " = " << v->value << std::endl;
+    }
 
     return 0;
 }

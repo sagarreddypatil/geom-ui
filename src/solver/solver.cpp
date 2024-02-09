@@ -10,6 +10,9 @@ SolutionStatus solve(Problem problem) {
     std::set<std::shared_ptr<Var>> vars;
     for (auto c : problem) {
         for (auto t : c.terms) {
+            if(!t.var->isFree)
+                continue;
+
             vars.insert(t.var);
         }
     }
@@ -22,22 +25,37 @@ SolutionStatus solve(Problem problem) {
         return SolutionStatus::OVERDETERMINED;
     }
 
+    if(problem.size() < vars.size()) {
+        return SolutionStatus::UNDERDETERMINED;
+    }
+
     Eigen::MatrixXd mat(problem.size(), vars.size());
     Eigen::VectorXd vec(problem.size());
 
     for (uint i = 0; i < problem.size(); i++) {
         auto c = problem[i];
+        vec(i) = c.constant;
+
         for (uint j = 0; j < c.terms.size(); j++) {
             auto t = c.terms[j];
+
+            if(!t.var->isFree) {
+                auto const_val = t.coef * t.var->value;
+                vec(i) -= const_val;
+                continue;
+            }
+
             auto it = std::find(vars.begin(), vars.end(), t.var);
             if (it != vars.end()) {
                 int idx = std::distance(vars.begin(), it);
+                
                 mat(i, idx) = t.coef;
             }
         }
-        vec(i) = c.constant;
     }
 
+    // TODO: maybe skip checking rank and just solve
+    // if current implementation is too slow
     auto decomp = mat.fullPivHouseholderQr();
     uint rank = decomp.rank();
 
