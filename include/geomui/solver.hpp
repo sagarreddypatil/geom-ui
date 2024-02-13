@@ -180,5 +180,6 @@ static std::shared_ptr<geomui::internal::Problem> operator|=(const Lhs& lhs, con
 
 geomui::LinTerm operator*(double coef, const geomui::Var& var);
 geomui::LinTerm operator-(const geomui::LinTerm& term);
-geomui::LinExpr operator+(const geomui::LinExpr& lhs, const geomui::LinTerm& rhs);
-geomui::LinExpr operator-(const geomui::LinExpr& lhs, const geomui::LinTerm& rhs);
+geomui::LinExpr operator+(const geomui::LinExpr& lhs, const geomui::LinExpr& rhs);
+geomui::LinExpr operator-(const geomui::LinExpr& lhs, const geomui::LinExpr& rhs);
+

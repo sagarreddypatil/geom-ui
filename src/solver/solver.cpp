@@ -11,33 +11,54 @@ SolutionStatus Problem::solve() {
         return SolutionStatus::SUCCESS;
     }
 
-    if(vars.size() == 0) {
+    std::set<std::shared_ptr<Var>> freeVars;
+    for (auto& v : vars) {
+        if(v->isFree) {
+            freeVars.insert(v);
+        }
+    }
+
+    std::set<std::shared_ptr<Var>> fixedVars;
+    for (auto& v : vars) {
+        if(!v->isFree) {
+            fixedVars.insert(v);
+        }
+    }
+
+    if(freeVars.size() == 0) {
         return SolutionStatus::SUCCESS;
     }
 
-    if(equations.size() > vars.size()) {
+    if(equations.size() > freeVars.size()) {
         return SolutionStatus::OVERDETERMINED;
     }
 
-    if(equations.size() < vars.size()) {
+    if(equations.size() < freeVars.size()) {
         return SolutionStatus::UNDERDETERMINED;
     }
 
-    Eigen::MatrixXd mat(equations.size(), vars.size());
+    Eigen::MatrixXd mat(equations.size(), freeVars.size());
     Eigen::VectorXd vec(equations.size());
 
     for (uint i = 0; i < equations.size(); i++) {
         auto& c = equations[i];
         vec(i) = c.constant;
 
-        for (uint j = 0; j < vars.size(); j++) {
-            auto var = *(std::next(vars.begin(), j));
-            auto it = c.vars.find(var);
+        for (uint j = 0; j < freeVars.size(); j++) {
+            const auto var = *(std::next(freeVars.begin(), j));
+            const auto it = c.vars.find(var);
 
             if(it != c.vars.end()) {
                 mat(i, j) = it->second; // the coefficient
             } else {
                 mat(i, j) = 0; // doesn't appear in the equation
+            }
+        }
+
+        for (auto& v : fixedVars) {
+            auto it = c.vars.find(v);
+            if(it != c.vars.end()) {
+                vec(i) -= it->second * v->value;
             }
         }
     }
@@ -47,14 +68,14 @@ SolutionStatus Problem::solve() {
     auto decomp = mat.fullPivHouseholderQr();
     uint rank = decomp.rank();
 
-    if(rank < vars.size()) {
+    if(rank < freeVars.size()) {
         return SolutionStatus::UNDERDETERMINED;
     }
 
     Eigen::VectorXd sol = decomp.solve(vec);
 
-    for (uint i = 0; i < vars.size(); i++) {
-        auto it = std::next(vars.begin(), i);
+    for (uint i = 0; i < freeVars.size(); i++) {
+        auto it = std::next(freeVars.begin(), i);
         auto v = *it;
         v->value = sol(i);
     }
@@ -104,12 +125,20 @@ geomui::LinTerm operator-(const geomui::LinTerm& term) {
   return {-term.first, term.second};
 }
 
-geomui::LinExpr operator+(const geomui::LinExpr& lhs, const geomui::LinTerm& rhs) {
+geomui::LinExpr operator+(const geomui::LinExpr& lhs, const geomui::LinExpr& rhs) {
   geomui::LinExpr new_expr = lhs;
-  new_expr.second.push_back(rhs);
+  for (auto& term : rhs.second) {
+    new_expr.second.push_back(term);
+  }
+  new_expr.first += rhs.first;
   return new_expr;
 }
 
-geomui::LinExpr operator-(const geomui::LinExpr& lhs, const geomui::LinTerm& rhs) {
-  return lhs + (-rhs);
+geomui::LinExpr operator-(const geomui::LinExpr& lhs, const geomui::LinExpr& rhs) {
+  geomui::LinExpr new_expr = lhs;
+  for (auto& term : rhs.second) {
+    new_expr.second.push_back(-term);
+  }
+  new_expr.first -= rhs.first;
+  return new_expr;
 }

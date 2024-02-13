@@ -1,8 +1,9 @@
 project(geomui-examples)
 
-add_executable(basic
-    basic.cpp
-)
-target_link_libraries(basic
-    geomui
-)
+function(add_example name)
+  add_executable(${name} ${name}.cpp)
+  target_link_libraries(${name} geomui)
+endfunction()
+
+add_example(basic)
+add_example(gui)
