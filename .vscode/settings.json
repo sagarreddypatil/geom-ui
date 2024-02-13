@@ -82,7 +82,9 @@
         "thread": "cpp",
         "typeindex": "cpp",
         "typeinfo": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "alignedvector3": "cpp",
+        "*.inc": "cpp"
     },
     "C_Cpp.default.compileCommands": "/home/sagar/Documents/geom-ui/builddir/compile_commands.json"
 }
