@@ -114,7 +114,6 @@ public:
   LinExpr terms;
 
   Constraint(double constant, LinExpr terms) : constant(constant), terms(terms) {}
-  Constraint(Vars vars, std::string expr); // parse string
 };
 
 typedef std::vector<Constraint> Problem;
