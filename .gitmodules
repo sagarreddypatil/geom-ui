@@ -2,3 +2,6 @@
 	path = external/eigen
 	url = https://gitlab.com/libeigen/eigen.git
 	branch=tags/3.4.0
+[submodule "external/raylib"]
+	path = external/raylib
+	url = https://github.com/raysan5/raylib.git
