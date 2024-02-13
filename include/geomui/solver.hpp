@@ -13,14 +13,17 @@
  * Just need to solve system of linear equations
  */
 
-namespace geomui {} // namespace geomui
+namespace geomui {
 
-namespace geomui::internal {
 enum class SolutionStatus {
   SUCCESS,
   OVERDETERMINED,
   UNDERDETERMINED
 };
+
+} // namespace geomui
+
+namespace geomui::internal {
 
 class Problem;
 

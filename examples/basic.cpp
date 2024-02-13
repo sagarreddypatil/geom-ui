@@ -13,16 +13,18 @@ int main() {
 
     auto& prob = x->problem;
 
-    for(uint i = 0; i < 1000000; i++) {
-        prob->invalidate();
-        prob->solve();
-        // std::cout << "x: " << x->eval() << std::endl;
-        // std::cout << "y: " << y->eval() << std::endl;
-        // std::cout << "z: " << z->eval() << std::endl;
-
-        // if(i % 1000 == 0) 
-        //     std::cout << i << std::endl;
+    auto status = prob->solve();
+    if(status == geomui::SolutionStatus::UNDERDETERMINED) {
+        std::cout << "Underdetermined" << std::endl;
+    } else if(status == geomui::SolutionStatus::OVERDETERMINED) {
+        std::cout << "Overdetermined" << std::endl;
+    } else {
+        std::cout << "Success" << std::endl;
     }
+
+    std::cout << "x: " << x->eval() << std::endl;
+    std::cout << "y: " << y->eval() << std::endl;
+    std::cout << "z: " << z->eval() << std::endl;
 
     return 0;
 }
