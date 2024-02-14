@@ -30,12 +30,15 @@ SolutionStatus Problem::solve() {
     }
 
     if(equations.size() > freeVars.size()) {
+        std::cout << "Overdetermined. " << equations.size() << " equations, " << freeVars.size() << " free vars" << std::endl;
         return SolutionStatus::OVERDETERMINED;
     }
 
     if(equations.size() < freeVars.size()) {
+        std::cout << "Underdetermined. " << equations.size() << " equations, " << freeVars.size() << " free vars" << std::endl;
         return SolutionStatus::UNDERDETERMINED;
     }
+    // std::cout << "Correct. " << equations.size() << " equations, " << freeVars.size() << " free vars" << std::endl;
 
     Eigen::MatrixXd mat(equations.size(), freeVars.size());
     Eigen::VectorXd vec(equations.size());
@@ -65,12 +68,12 @@ SolutionStatus Problem::solve() {
 
     // TODO: maybe skip checking rank and just solve
     // if current implementation is too slow
-    auto decomp = mat.fullPivHouseholderQr();
-    uint rank = decomp.rank();
+    auto decomp = mat.householderQr();
+    // uint rank = decomp.rank();
 
-    if(rank < freeVars.size()) {
-        return SolutionStatus::UNDERDETERMINED;
-    }
+    // if(rank < freeVars.size()) {
+    //     return SolutionStatus::UNDERDETERMINED;
+    // }
 
     Eigen::VectorXd sol = decomp.solve(vec);
 
@@ -89,7 +92,13 @@ double Var::eval() {
         throw std::runtime_error("Variable not part of a problem");
     }
 
-    problem->solve();
+    auto status = problem->solve();
+    if(status == SolutionStatus::UNDERDETERMINED) {
+        throw std::runtime_error("Underdetermined system of equations");
+    }
+    if (status == SolutionStatus::OVERDETERMINED) {
+        throw std::runtime_error("Overdetermined system of equations");
+    }
 
     return value;
 }

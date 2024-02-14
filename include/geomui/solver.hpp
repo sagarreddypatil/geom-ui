@@ -31,7 +31,7 @@ class Var {
 public:
   double value;
 
-  bool isFree;
+  const bool isFree;
   std::shared_ptr<Problem> problem;
 
 public:
@@ -93,10 +93,28 @@ namespace geomui {
 // typedef std::pair<double, Var> LinTerm;
 // typedef std::pair<double, std::vector<LinTerm>> LinExpr;
 
-class Var : public std::shared_ptr<internal::Var> {
+class Var {
+private:
+  std::shared_ptr<internal::Var> var;
 public:
-  Var() : std::shared_ptr<internal::Var>(std::make_shared<internal::Var>()) {}
-  Var(double value) : std::shared_ptr<internal::Var>(std::make_shared<internal::Var>(value)) {}
+  Var() : var(std::make_shared<internal::Var>()) {}
+  Var(double value) : var(std::make_shared<internal::Var>(value)) {}
+
+  Var(const Var& other) : var(other.var) {}
+  Var(Var&& other) : var(std::move(other.var)) {}
+
+  internal::Var* operator->() const {
+    return var.get();
+  }
+
+  operator std::shared_ptr<internal::Var>() {
+    return var;
+  }
+
+  // for std::set
+  bool operator<(const Var& other) const {
+    return var < other.var;
+  }
 };
 
 class LinTerm : public std::pair<double, Var> {
@@ -122,7 +140,7 @@ LinExpr upcast(const LinExpr& expr);
 } // namespace geomui
 
 template<typename Lhs, typename Rhs>
-static std::shared_ptr<geomui::internal::Problem> operator|=(const Lhs& lhs, const Rhs& rhs) {
+static void operator|=(const Lhs& lhs, const Rhs& rhs) {
   geomui::LinExpr lhsexpr = geomui::upcast(lhs);
   geomui::LinExpr rhsexpr = geomui::upcast(rhs);
 
@@ -134,24 +152,25 @@ static std::shared_ptr<geomui::internal::Problem> operator|=(const Lhs& lhs, con
     vars.insert(v);
   }
 
-  std::shared_ptr<geomui::internal::Problem> problem;
-
   // check if any of the vars have an associated problem
+  std::set<std::shared_ptr<geomui::internal::Problem>> problems;
   for(auto& v : vars) {
-    if(!problem) {
-      problem = v->problem;
-      continue;
-    }
-
-    if(v->problem != problem) {
-      /// TODO: keep track of where var was defined for better error message
-      throw std::runtime_error("Var already belongs to another problem");
+    if(v->problem) {
+      problems.insert(v->problem);
     }
   }
 
-  // if no problem was found, create a new one
-  if(!problem) {
-    problem = std::make_shared<geomui::internal::Problem>();
+  // combine all the problems
+  auto problem = std::make_shared<geomui::internal::Problem>();
+  for(auto& p : problems) {
+    for(auto& eq : p->equations) {
+      problem->addEquation(eq);
+    }
+  }
+
+  // set all vars of the new problem to be part of the problem
+  for(auto& v : problem->vars) {
+    v->problem = problem;
   }
 
   // set all vars to be part of the same problem
@@ -175,7 +194,7 @@ static std::shared_ptr<geomui::internal::Problem> operator|=(const Lhs& lhs, con
   problem->addEquation(eq);
 
   // return the problem
-  return problem;
+  // return problem;
 }
 
 geomui::LinTerm operator*(double coef, const geomui::Var& var);

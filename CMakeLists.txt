@@ -7,7 +7,7 @@ set(EIGEN3_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/eigen)
 set(CMAKE_CXX_STANDARD 23)
 
 set(LIBRARY_SOURCES
-    src/solver/solver.cpp
+    src/solver.cpp
 )
 
 set(MY_BUILD_EXAMPLES ${BUILD_EXAMPLES})
