@@ -41,7 +41,8 @@ public:
 
   double eval();
   int evalInt() {
-    return std::round(eval() + 1e-4);
+    double evald = eval();
+    return static_cast<int>(evald + 0.5 + 1e-5);
   }
 };
 
