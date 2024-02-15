@@ -65,8 +65,6 @@ RenderComponent root(Viewport &viewport) {
   double textX = textRect.tl.x->evalInt();
   double textY = textRect.tl.y->evalInt();
 
-  std::cout << "textX: " << textRect.tl.x->eval() << "; int: " << textX << std::endl;
-
   return [mousePosText, textX, textY, renderStuff]() {
     ClearBackground(BLACK);
 
