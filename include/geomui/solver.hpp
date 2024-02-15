@@ -6,6 +6,7 @@
 #include <variant>
 #include <memory>
 #include <stdexcept>
+#include <cmath>
 
 /*
  * 2D Geometric Constraint Solver
@@ -39,6 +40,9 @@ public:
   Var(double value) : value(value), isFree(false), problem(nullptr) {}
 
   double eval();
+  int evalInt() {
+    return std::round(eval() + 1e-4);
+  }
 };
 
 class Equation {

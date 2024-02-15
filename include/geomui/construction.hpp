@@ -54,22 +54,34 @@ static void width(const Line& l, const Var& w) {
 }
 
 static void height(const Line& l, const Var& h) {
-    h |= l.p1.y - l.p2.y;
+    h |= l.p2.y - l.p1.y;
 }
 
 class Rectangle {
 public:
-    const Point tl, br;
+    const Point tl, br, center;
     const Var wVar, hVar;
+
     const Line top;
+    const Line left;
+    const Line diagonal;
 
     Rectangle() : tl(), br(), wVar(), hVar(), top() {
         wVar |= br.x - tl.x;
-        hVar |= tl.y - br.y;
+        hVar |= br.y - tl.y;
 
         coincedent(top.p1, tl);
         top.p2.x |= br.x;
         top.p2.y |= tl.y;
+
+        coincedent(left.p1, tl);
+        left.p2.x |= tl.x;
+        left.p2.y |= br.y;
+
+        coincedent(diagonal.p1, tl);
+        coincedent(diagonal.p2, br);
+
+        midpoint(diagonal, center);
     }
 };
 
