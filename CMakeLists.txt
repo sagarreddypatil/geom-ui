@@ -19,6 +19,8 @@ add_subdirectory(lib/raylib)
 
 set(BUILD_EXAMPLES ${MY_BUILD_EXAMPLES} CACHE BOOL "" FORCE)
 
+set(CMAKE_CXX_FLAGS "-O3 -Wall -Wextra -Wno-unused-function")
+
 add_library(${PROJECT_NAME} STATIC ${LIBRARY_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 target_include_directories(${PROJECT_NAME} PRIVATE ${EIGEN3_INCLUDE_DIR})

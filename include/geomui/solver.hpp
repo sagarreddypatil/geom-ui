@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <set>
 #include <variant>
 #include <memory>
@@ -52,6 +53,8 @@ public:
   double constant = 0; // rhs constant
 
   Equation() = default;
+  Equation(const Equation& other) = default;
+  Equation(Equation&& other) = default;
 
   void addTerm(double coeff, std::shared_ptr<Var> var, bool left) {
     auto inserted = vars.insert({var, 0}).first;
@@ -74,7 +77,7 @@ public:
 
   Problem() = default;
 
-  void addEquation(const Equation& eq) {
+  void addEquation(Equation&& eq) {
     equations.push_back(eq);
     for (auto& [var, _] : eq.vars) {
       vars.insert(var);
@@ -120,6 +123,16 @@ public:
   bool operator<(const Var& other) const {
     return var < other.var;
   }
+
+  bool operator==(const Var& other) const {
+    return var == other.var;
+  }
+
+  struct Hash {
+    size_t operator()(const Var& v) const {
+      return std::hash<std::shared_ptr<internal::Var>>{}(v.var);
+    }
+  };
 };
 
 class LinTerm : public std::pair<double, Var> {
@@ -169,7 +182,7 @@ static void operator|=(const Lhs& lhs, const Rhs& rhs) {
   auto problem = std::make_shared<geomui::internal::Problem>();
   for(auto& p : problems) {
     for(auto& eq : p->equations) {
-      problem->addEquation(eq);
+      problem->addEquation(std::move(eq));
     }
   }
 
@@ -196,7 +209,7 @@ static void operator|=(const Lhs& lhs, const Rhs& rhs) {
   }
 
   // add the equation to the problem
-  problem->addEquation(eq);
+  problem->addEquation(std::move(eq));
 
   // return the problem
   // return problem;
