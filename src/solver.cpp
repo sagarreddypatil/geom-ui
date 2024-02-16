@@ -68,7 +68,7 @@ SolutionStatus Problem::solve() {
 
     // TODO: maybe skip checking rank and just solve
     // if current implementation is too slow
-    auto decomp = mat.householderQr();
+    auto decomp = mat.fullPivHouseholderQr();
     // uint rank = decomp.rank();
 
     // if(rank < freeVars.size()) {

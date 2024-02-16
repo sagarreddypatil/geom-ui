@@ -219,4 +219,3 @@ geomui::LinTerm operator*(double coef, const geomui::Var& var);
 geomui::LinTerm operator-(const geomui::LinTerm& term);
 geomui::LinExpr operator+(const geomui::LinExpr& lhs, const geomui::LinExpr& rhs);
 geomui::LinExpr operator-(const geomui::LinExpr& lhs, const geomui::LinExpr& rhs);
-

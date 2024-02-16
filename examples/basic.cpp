@@ -5,8 +5,6 @@
 int main() {
     geomui::Var x;
     geomui::Var y;
-    // geomui::Var x(10);
-    // geomui::Var y(2);
     geomui::Var z;
 
     x - 2*y + 3*z |= 7;

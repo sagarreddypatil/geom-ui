@@ -1,6 +1,5 @@
 #include <geomui.hpp>
 #include <iostream>
-#include <cmath>
 #include <raylib.h>
 
 using namespace geomui;
@@ -46,56 +45,21 @@ RenderComponent root(Viewport &viewport) {
 
   coincedent(vpRect.center, textRect.center);
 
-  auto renderTextBox = drawRect(textRect);
-  auto renderTextDiag = drawLine(textRect.diagonal);
-  auto renderTextCenter = drawPoint(textRect.center);
-
-  auto renderVpDiag = drawLine(vpRect.diagonal);
-  auto renderVpCenter = drawPoint(vpRect.center);
-
-  auto renderStuff = [renderTextBox, renderTextDiag, renderTextCenter, renderVpDiag, renderVpCenter]() {
-    // renderTextBox();
-    // renderTextDiag();
-    // renderTextCenter();
-
-    // renderVpDiag();
-    // renderVpCenter();
-  };
-
   double textX = textRect.tl.x->evalInt();
   double textY = textRect.tl.y->evalInt();
 
-  return [mousePosText, textX, textY, renderStuff]() {
+  return [mousePosText, textX, textY]() {
     ClearBackground(BLACK);
-
-    renderStuff();
-
     DrawText(mousePosText.c_str(), textX, textY, 20, WHITE);
   };
 }
 
 int main() {
-  SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-  InitWindow(800, 600, "geomui test");
+  Window window("geomui test", root, Viewport(800, 600));
 
-  Viewport viewport;
-  Vector2 mousePos;
-
-  while (!WindowShouldClose()) {
-    mousePos = GetMousePosition();
-    viewport.update(mousePos.x, mousePos.y, GetScreenWidth(),
-                    GetScreenHeight());
-
-    auto renderRoot = root(viewport);
-
-    BeginDrawing();
-
-    renderRoot();
-
-    EndDrawing();
+  while(!window.closed()) {
+    window.render();
   }
-
-  CloseWindow();
 
   return 0;
 }

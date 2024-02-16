@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.28)
 project(geomui)
 
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache) # Less useful to do it for linking, see edit2
+endif(CCACHE_FOUND)
+
 # include eigen files, don't use find_package
 set(EIGEN3_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/eigen)
 
@@ -8,6 +14,7 @@ set(CMAKE_CXX_STANDARD 23)
 
 set(LIBRARY_SOURCES
     src/solver.cpp
+    src/ui.cpp
 )
 
 set(MY_BUILD_EXAMPLES ${BUILD_EXAMPLES})
