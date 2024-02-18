@@ -4,31 +4,8 @@
 
 using namespace geomui;
 
-RenderComponent drawPoint(const geomui::Point &point) {
-  int x = point.x->evalInt(), y = point.y->evalInt();
+// RenderComponent text(std
 
-  return [x, y]() {
-    DrawCircle(x, y, 2, WHITE);
-  };
-}
-
-RenderComponent drawLine(const geomui::Line &line) {
-  int x1 = line.p1.x->evalInt(),
-      y1 = line.p1.y->evalInt(),
-      x2 = line.p2.x->evalInt(),
-      y2 = line.p2.y->evalInt();
-
-  return [x1, y1, x2, y2]() { DrawLine(x1, y1, x2, y2, WHITE); };
-}
-
-RenderComponent drawRect(const geomui::Rectangle &rect) {
-  int x = rect.tl.x->evalInt(),
-      y = rect.tl.y->evalInt(),
-      w = rect.wVar->evalInt(),
-      h = rect.hVar->evalInt();
-
-  return [x, y, w, h]() { DrawRectangleLines(x, y, w, h, WHITE); };
-}
 
 RenderComponent root(Viewport &viewport) {
   auto mousePosText = "Mouse Position: (" + std::to_string(viewport.mouseX) +
@@ -48,8 +25,17 @@ RenderComponent root(Viewport &viewport) {
   double textX = textRect.tl.x->evalInt();
   double textY = textRect.tl.y->evalInt();
 
-  return [mousePosText, textX, textY]() {
+  auto renderVpRect = vpRect.draw();
+  auto renderTextRect = textRect.draw();
+
+  auto renderList = [renderVpRect, renderTextRect] {
+    renderVpRect();
+    renderTextRect();
+  };
+
+  return [mousePosText, textX, textY, renderList]() {
     ClearBackground(BLACK);
+    renderList();
     DrawText(mousePosText.c_str(), textX, textY, 20, WHITE);
   };
 }

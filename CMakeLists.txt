@@ -15,6 +15,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(LIBRARY_SOURCES
     src/solver.cpp
     src/ui.cpp
+    src/construction.cpp
 )
 
 set(MY_BUILD_EXAMPLES ${BUILD_EXAMPLES})

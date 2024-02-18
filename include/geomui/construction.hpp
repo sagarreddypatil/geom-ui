@@ -13,6 +13,8 @@ public:
     
     Point() : x(), y() {}
     Point(double x, double y) : x(x), y(y) {}
+
+    RenderComponent draw();
 };
 
 
@@ -34,6 +36,7 @@ public:
     const Point p1, p2;
 
     Line() : p1(), p2() {}
+    RenderComponent draw();
 };
 
 static void horizontal(const Line& l) {
@@ -83,6 +86,8 @@ public:
 
         midpoint(diagonal, center);
     }
+
+    RenderComponent draw();
 };
 
 } // namespace geomui
