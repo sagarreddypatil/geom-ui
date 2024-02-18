@@ -11,6 +11,12 @@ examples: build
 build: CMAKE_FLAGS += -DCMAKE_BUILD_TYPE=Debug
 build: cmake
 
+release_examples: CMAKE_FLAGS += -DBUILD_EXAMPLES=1
+release_examples: release
+
+release: CMAKE_FLAGS += -DCMAKE_BUILD_TYPE=Release
+release: cmake
+
 cmake: build-folder deps
 	@cd build && cmake $(CMAKE_FLAGS) .. --log-level=STATUS && ninja
 
