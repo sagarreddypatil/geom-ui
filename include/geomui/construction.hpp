@@ -1,6 +1,7 @@
 #pragma once
 
 #include <geomui/solver.hpp>
+#include <geomui/component.hpp>
 #include <iostream>
 
 // some construction prefabs
@@ -62,24 +63,28 @@ static void height(const Line& l, const Var& h) {
 
 class Rectangle {
 public:
-    const Point tl, br, center;
+    const Point tl, tr, bl, br, center;
     const Var wVar, hVar;
 
     const Line top;
     const Line left;
     const Line diagonal;
 
-    Rectangle() : tl(), br(), wVar(), hVar(), top() {
+    Rectangle() : tl(), tr(), bl(), br(), wVar(), hVar(), top() {
         wVar |= br.x - tl.x;
         hVar |= br.y - tl.y;
 
+        tr.x |= br.x;
+        tr.y |= tl.y;
+
+        bl.x |= tl.x;
+        bl.y |= br.y;
+
         coincedent(top.p1, tl);
-        top.p2.x |= br.x;
-        top.p2.y |= tl.y;
+        coincedent(top.p2, tr);
 
         coincedent(left.p1, tl);
-        left.p2.x |= tl.x;
-        left.p2.y |= br.y;
+        coincedent(left.p2, bl);
 
         coincedent(diagonal.p1, tl);
         coincedent(diagonal.p2, br);
