@@ -1,13 +1,9 @@
 #pragma once
 
 #include <vector>
-#include <unordered_map>
-#include <unordered_set>
 #include <set>
-#include <variant>
 #include <memory>
-#include <stdexcept>
-#include <cmath>
+#include <optional>
 
 /*
  * 2D Geometric Constraint Solver
@@ -17,205 +13,123 @@
 
 namespace geomui {
 
-enum class SolutionStatus {
-  SUCCESS,
-  OVERDETERMINED,
-  UNDERDETERMINED
+class variable;
+class expression;
+
+class variable {
+public:
+  std::shared_ptr<double> value;
+  bool isFree;
+
+  variable() : value(std::make_shared<double>(0)), isFree(true) {}
+  variable(double value) : value(std::make_shared<double>(value)), isFree(false) {}
+  variable(const variable &other) : value(other.value), isFree(other.isFree) {}
+
+  operator expression();
 };
 
-} // namespace geomui
-
-namespace geomui::internal {
-
-class Problem;
-
-class Var {
+class expression {
 public:
-  double value;
+  class term {
+  public:
+    std::optional<variable> var;
+    double coef;
 
-  const bool isFree;
-  std::shared_ptr<Problem> problem;
-
-public:
-  Var() : value(0), isFree(true), problem(nullptr) {}
-  Var(double value) : value(value), isFree(false), problem(nullptr) {}
-
-  double eval();
-  int evalInt() {
-    double evald = eval();
-    return static_cast<int>(evald + 0.5 + 1e-5);
-  }
-};
-
-class Equation {
-public:
-  std::unordered_map<std::shared_ptr<Var>, double> vars;
-  double constant = 0; // rhs constant
-
-  Equation() = default;
-  Equation(const Equation& other) = default;
-  Equation(Equation&& other) = default;
-
-  void addTerm(double coeff, std::shared_ptr<Var> var, bool left) {
-    auto inserted = vars.insert({var, 0}).first;
-
-    const double accCoeff = left ? coeff : -coeff;
-    inserted->second += accCoeff;
-  }
-
-  void addConstant(double constant, bool left) {
-    const double accConstant = left ? -constant : constant;
-    this->constant += accConstant;
-  }
-};
-
-class Problem {
-  bool isSolved = false;
-public:
-  std::vector<Equation> equations;
-  std::set<std::shared_ptr<Var>> vars;
-
-  Problem() = default;
-
-  void addEquation(Equation&& eq) {
-    equations.push_back(eq);
-    for (auto& [var, _] : eq.vars) {
-      vars.insert(var);
-    }
-
-    isSolved = false;
-  }
-
-  SolutionStatus solve();
-
-  void invalidate() {
-    isSolved = false;
-  }
-};
-
-} // namespace geomui::internal
-
-namespace geomui {
-
-// typedef std::shared_ptr<internal::Var> Var;
-// typedef std::pair<double, Var> LinTerm;
-// typedef std::pair<double, std::vector<LinTerm>> LinExpr;
-
-class Var {
-private:
-  std::shared_ptr<internal::Var> var;
-public:
-  Var() : var(std::make_shared<internal::Var>()) {}
-  Var(double value) : var(std::make_shared<internal::Var>(value)) {}
-
-  Var(const Var& other) : var(other.var) {}
-  Var(Var&& other) : var(std::move(other.var)) {}
-
-  internal::Var* operator->() const {
-    return var.get();
-  }
-
-  operator std::shared_ptr<internal::Var>() {
-    return var;
-  }
-
-  // for std::set
-  bool operator<(const Var& other) const {
-    return var < other.var;
-  }
-
-  bool operator==(const Var& other) const {
-    return var == other.var;
-  }
-
-  struct Hash {
-    size_t operator()(const Var& v) const {
-      return std::hash<std::shared_ptr<internal::Var>>{}(v.var);
-    }
+    term(variable var, double coef) : var(var), coef(coef) {}
+    term(double coef) : var(std::nullopt), coef(coef) {}
   };
+
+  std::vector<term> terms;
+
+  expression() {}
+  expression(const variable &var) { terms.push_back(term(var, 1)); }
+  expression(double coef) { terms.push_back(term(coef)); }
+  expression(const expression &other) : terms(other.terms) {}
+
+  inline expression &operator+=(const expression &other) {
+    for (auto &term : other.terms) {
+      terms.push_back(term);
+    }
+    return *this;
+  }
+
+  inline expression &operator*=(double coef) {
+    for (auto &term : terms) {
+      term.coef *= coef;
+    }
+    return *this;
+  }
+
+  inline expression &operator/=(double coef) {
+    for (auto &term : terms) {
+      term.coef /= coef;
+    }
+    return *this;
+  }
+
+  inline expression operator-() const {
+    expression ret = *this;
+    for (auto &term : ret.terms) {
+      term.coef = -term.coef;
+    }
+    return ret;
+  }
 };
 
-class LinTerm : public std::pair<double, Var> {
+inline expression operator*(double coef, const expression &expr) {
+  expression ret = expr;
+  ret *= coef;
+  return ret;
+};
+
+inline expression operator*(const expression &expr, double coef) {
+  expression ret = expr;
+  ret *= coef;
+  return ret;
+};
+
+inline expression operator/(const expression &expr, double coef) {
+  expression ret = expr;
+  ret /= coef;
+  return ret;
+};
+
+inline expression operator+(const expression &lhs, const expression &rhs) {
+  expression ret = lhs;
+  ret += rhs;
+  return ret;
+};
+
+inline expression operator+(double coef, const expression &expr) {
+  expression ret = expr;
+  ret += coef;
+  return ret;
+};
+
+inline expression operator+(const expression &expr, double coef) {
+  expression ret = expr;
+  ret += coef;
+  return ret;
+};
+
+class constraint {
+  public:
+    expression lhs; // reduced form, no constants
+    double rhs; // constant
+
+    // always in the form of lhs <= rhs or lhs == rhs
+    // lhs >= rhs can be transformed to -lhs <= -rhs
+    bool inequality; // represents if >= (true) or == (false)
+  constraint(expression lhs, bool inequality) : lhs(lhs), inequality(inequality) {}
+};
+
+class system {
+private:
+  std::vector<constraint> constraints;
+
 public:
-  LinTerm(double coef, Var var) : std::pair<double, Var>(coef, var) {}
-  LinTerm(Var var) : LinTerm(1, var) {}
+  system(std::initializer_list<constraint> constraints) : constraints(constraints) {}
+  void solve();
 };
-
-class LinExpr : public std::pair<double, std::vector<LinTerm>> {
-public:
-  LinExpr(double constant, const std::vector<LinTerm>& terms)
-      : std::pair<double, std::vector<LinTerm>>(constant, terms) {}
-  LinExpr(double constant) : LinExpr(constant, {}) {}
-  LinExpr(const LinTerm& term) : LinExpr(0, {term}) {}
-  LinExpr(const Var& var) : LinExpr(0, {LinTerm(var)}) {}
-};
-
-LinExpr upcast(double constant);
-LinExpr upcast(const Var& var);
-LinExpr upcast(const LinTerm& term);
-LinExpr upcast(const LinExpr& expr);
 
 } // namespace geomui
-
-template<typename Lhs, typename Rhs>
-static void operator|=(const Lhs& lhs, const Rhs& rhs) {
-  geomui::LinExpr lhsexpr = geomui::upcast(lhs);
-  geomui::LinExpr rhsexpr = geomui::upcast(rhs);
-
-  std::set<geomui::Var> vars;
-  for(auto& [_, v] : lhsexpr.second) {
-    vars.insert(v);
-  }
-  for(auto& [_, v] : rhsexpr.second) {
-    vars.insert(v);
-  }
-
-  // check if any of the vars have an associated problem
-  std::set<std::shared_ptr<geomui::internal::Problem>> problems;
-  for(auto& v : vars) {
-    if(v->problem) {
-      problems.insert(v->problem);
-    }
-  }
-
-  // combine all the problems
-  auto problem = std::make_shared<geomui::internal::Problem>();
-  for(auto& p : problems) {
-    for(auto& eq : p->equations) {
-      problem->addEquation(std::move(eq));
-    }
-  }
-
-  // set all vars of the new problem to be part of the problem
-  for(auto& v : problem->vars) {
-    v->problem = problem;
-  }
-
-  // set all vars to be part of the same problem
-  for(auto& v : vars) {
-    v->problem = problem;
-  }
-
-  // construct an equation and add it to the problem
-  geomui::internal::Equation eq;
-  eq.addConstant(lhsexpr.first, true);
-  for(auto& [c, v] : lhsexpr.second) {
-    eq.addTerm(c, v, true);
-  }
-
-  eq.addConstant(rhsexpr.first, false);
-  for(auto& [c, v] : rhsexpr.second) {
-    eq.addTerm(c, v, false);
-  }
-
-  // add the equation to the problem
-  problem->addEquation(std::move(eq));
-
-  // return the problem
-  // return problem;
-}
-
-geomui::LinTerm operator*(double coef, const geomui::Var& var);
-geomui::LinTerm operator-(const geomui::LinTerm& term);
-geomui::LinExpr operator+(const geomui::LinExpr& lhs, const geomui::LinExpr& rhs);
-geomui::LinExpr operator-(const geomui::LinExpr& lhs, const geomui::LinExpr& rhs);
